@@ -6,8 +6,11 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
+
 COPY ["Slipways.API/Slipways.API.csproj", "Slipways.API/"]
-RUN dotnet restore "Slipways.API/Slipways.API.csproj"
+COPY ["NuGet.config", "Slipways.API/"]
+
+RUN dotnet restore "Slipways.API/Slipways.API.csproj" --configfile ./Slipways.API/NuGet.config
 COPY . .
 WORKDIR "/src/Slipways.API"
 RUN dotnet build "Slipways.API.csproj" -c Release -o /app/build

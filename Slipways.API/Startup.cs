@@ -117,6 +117,7 @@ namespace Slipways.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapMetrics();
             });
         }
     }

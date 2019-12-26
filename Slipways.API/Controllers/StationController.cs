@@ -28,25 +28,23 @@ namespace com.b_velop.Slipways.API.Controllers
 
         // GET: api/values
         [HttpGet]
-        [Authorize("reader")]
         public async Task<IEnumerable<Station>> GetAsync()
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_GET_api_station_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_station_seconds", "Histogram").NewTimer())
             {
-                var result = await _rep.Station.SelectIncludeAllAsync();
+                var result = await _rep.Station.SelectAllAsync();
                 return result.OrderBy(_ => _.Longname);
             }
         }
 
         // GET api/values/8177a148-5674-4b8f-8ded-050907f640f3
         [HttpGet("{id}")]
-        [Authorize("reader")]
         public async Task<ActionResult<Station>> GetAsync(
             Guid id)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_GET_api_station_id_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_station_id_seconds", "Histogram").NewTimer())
             {
-                return await _rep.Station.SelectByIdIncludeAsync(id);
+                return await _rep.Station.SelectByIdAsync(id);
             }
         }
     }

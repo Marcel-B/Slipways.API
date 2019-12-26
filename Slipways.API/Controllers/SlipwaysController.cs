@@ -38,25 +38,23 @@ namespace com.b_velop.Slipways.API.Controllers
 
         // GET: api/slipway
         [HttpGet]
-        [Authorize("reader")]
         public async Task<IEnumerable<Slipway>> GetAsync()
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_GET_api_slipway_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_slipway_seconds", "Histogram").NewTimer())
             {
-                var result = await _rep.Slipway.SelectIncludeAllAsync();
+                var result = await _rep.Slipway.SelectAllAsync();
                 return result.OrderBy(_ => _.Name);
             }
         }
 
         // GET api/slipway/8177a148-5674-4b8f-8ded-050907f640f3
         [HttpGet("{id}")]
-        [Authorize("reader")]
         public async Task<ActionResult<Slipway>> GetAsync(
             Guid id)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_GET_api_slipway_id_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_slipway_id_seconds", "Histogram").NewTimer())
             {
-                return await _rep.Slipway.SelectByIdIncludeAsync(id);
+                return await _rep.Slipway.SelectByIdAsync(id);
             }
         }
 
@@ -65,7 +63,8 @@ namespace com.b_velop.Slipways.API.Controllers
         public async Task<ActionResult> PostAsync(
             SlipwayDto slipwayDto)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_POST_api_slipway_seconds", "Histogram").NewTimer())
+            Console.WriteLine($"Water is: {slipwayDto.WaterFk}");
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_POST_api_slipway_seconds", "Histogram").NewTimer())
             {
                 try
                 {
@@ -73,7 +72,7 @@ namespace com.b_velop.Slipways.API.Controllers
                     slipway.Id = Guid.NewGuid();
 
                     var result = await _rep.Slipway.InsertAsync(slipway);
-                    if (result != null)
+                    if (result != null && slipwayDto.Extras != null)
                     {
                         var extras = new HashSet<SlipwayExtra>();
                         foreach (var extra in slipwayDto.Extras)
@@ -103,18 +102,18 @@ namespace com.b_velop.Slipways.API.Controllers
 
         [HttpPut("{id}")]
         [Authorize("allin")]
-        public ActionResult PutAsync(
+        public async Task<ActionResult> PutAsync(
             Guid id,
             SlipwayDto slipwayDto)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_PUT_api_slipway_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_PUT_api_slipway_seconds", "Histogram").NewTimer())
             {
                 try
                 {
                     var slipway = slipwayDto.ToClass();
                     slipway.Id = Guid.NewGuid();
 
-                    var result = _rep.Slipway.Update(slipway);
+                    var result = await _rep.Slipway.UpdateAsync(slipway);
                     if (result != null)
                     {
                         var extras = new HashSet<SlipwayExtra>();
@@ -129,7 +128,7 @@ namespace com.b_velop.Slipways.API.Controllers
                             };
                             extras.Add(slipwayExtra);
                         }
-                        _ = _rep.SlipwayExtra.UpdateRange(extras);
+                        _ = await _rep.SlipwayExtra.UpdateRangeAsync(extras);
                     }
                     slipwayDto.Id = slipway.Id;
                     slipwayDto.Created = result.Created;
@@ -145,20 +144,25 @@ namespace com.b_velop.Slipways.API.Controllers
 
         [HttpDelete("{id}")]
         [Authorize("allin")]
-        public async Task<ActionResult> DeleteSlipwayAsync(
+        public async Task<string> DeleteSlipwayAsync(
             Guid id)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_DELETE_api_slipway_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_DELETE_api_slipway_seconds", "Histogram").NewTimer())
             {
                 try
                 {
+                    _logger.LogInformation(5555, $"Try to delete Slipway '{id}'");
                     var result = await _rep.Slipway.DeleteAsync(id);
-                    return new JsonResult(result, _options);
+                    var json = JsonSerializer.Serialize(result, _options);
+                    _logger.LogInformation($"Delete Result is:\n{json}");
+                    Response.StatusCode = 200;
+                    return json;
                 }
                 catch (Exception e)
                 {
                     _logger.LogError(6666, $"Error occurred while deleting Slipway with id '{id}'", e);
-                    return new StatusCodeResult(500);
+                    Response.StatusCode = 500;
+                    return string.Empty;
                 }
             }
         }

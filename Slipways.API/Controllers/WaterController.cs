@@ -15,6 +15,7 @@ namespace com.b_velop.Slipways.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class WaterController : ControllerBase
     {
         private readonly JsonSerializerOptions _options;
@@ -37,10 +38,9 @@ namespace com.b_velop.Slipways.API.Controllers
 
         // GET: api/water
         [HttpGet]
-        [Authorize("reader")]
         public async Task<IEnumerable<Water>> GetAsync()
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_GET_api_water_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_water_seconds", "Histogram").NewTimer())
             {
                 var result = await _rep.Water.SelectAllAsync();
                 return result.OrderBy(_ => _.Longname);
@@ -49,22 +49,20 @@ namespace com.b_velop.Slipways.API.Controllers
 
         // GET api/water/8177a148-5674-4b8f-8ded-050907f640f3
         [HttpGet("{id}")]
-        [Authorize("reader")]
         public async Task<ActionResult<Water>> GetAsync(
             Guid id)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_GET_api_water_id_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_water_id_seconds", "Histogram").NewTimer())
             {
                 return await _rep.Water.SelectByIdAsync(id);
             }
         }
 
         [HttpPost]
-        [Authorize("allin")]
         public async Task<ActionResult> PostAsync(
             WaterDto waterDto)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_POST_api_water_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_POST_api_water_seconds", "Histogram").NewTimer())
             {
                 var water = new Water
                 {
@@ -80,27 +78,25 @@ namespace com.b_velop.Slipways.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize("allin")]
         public async Task<ActionResult> PutAsync(
             Guid id,
             WaterDto waterDto)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_PUT_api_water_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_PUT_api_water_seconds", "Histogram").NewTimer())
             {
                 var water = await _rep.Water.SelectByIdAsync(id);
                 water.Longname = waterDto.Longname;
                 water.Shortname = waterDto.Shortname;
-                var result = _rep.Water.Update(water);
+                var result = _rep.Water.UpdateAsync(water);
                 return new JsonResult(waterDto, _options);
             }
         }
 
         [HttpDelete("{id}")]
-        [Authorize("allin")]
         public async Task<ActionResult> DeleteAsync(
             Guid id)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_DELETE_api_water_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_DELETE_api_water_seconds", "Histogram").NewTimer())
             {
                 try
                 {

@@ -15,6 +15,7 @@ namespace com.b_velop.Slipways.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ServiceController : Controller
     {
         private IRepositoryWrapper _rep;
@@ -38,19 +39,17 @@ namespace com.b_velop.Slipways.API.Controllers
 
         // GET: api/values
         [HttpGet]
-        [Authorize("reader")]
         public async Task<IEnumerable<Service>> Get()
         {
-            var values = await _rep.Service.GetAllIncludeAsync();
+            var values = await _rep.Service.SelectAllAsync();
             return values;
         }
 
         [HttpPost]
-        [Authorize("allin")]
         public async Task<ActionResult> PostAsync(
            ServiceDto serviceDto)
         {
-            using (Metrics.CreateHistogram($"slipwaysql_duration_POST_api_service_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipwayapi_duration_POST_api_service_seconds", "Histogram").NewTimer())
             {
                 try
                 {

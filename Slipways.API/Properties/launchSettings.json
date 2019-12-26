@@ -17,14 +17,20 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "Slipways.API": {
+    "com.b_velop.Slipways.API": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "weatherforecast",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "PORT": "1433",
+        "API_RESOURCE": "slipways.api",
+        "dev_slipway_db": "foo123bar!",
+        "SERVER": "db",
+        "AUTHORITY": "https://identity.qaybe.de",
+        "DATABASE": "Slipways",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "USER": "sa"
       },
-      "applicationUrl": "http://localhost:5000"
+      "applicationUrl": "https://localhost:5001;http://localhost:5000"
     },
     "Docker": {
       "commandName": "Docker",

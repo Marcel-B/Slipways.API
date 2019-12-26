@@ -1,0 +1,114 @@
+﻿using com.b_velop.Slipways.Data.Contracts;
+using com.b_velop.Slipways.Data.Dtos;
+using com.b_velop.Slipways.Data.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Prometheus;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace com.b_velop.Slipways.API.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class WaterController : ControllerBase
+    {
+        private readonly JsonSerializerOptions _options;
+        private readonly IRepositoryWrapper _rep;
+        private readonly ILogger<WaterController> _logger;
+
+        public WaterController(
+            IRepositoryWrapper rep,
+            ILogger<WaterController> logger)
+        {
+            _options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true,
+                IgnoreNullValues = true
+            };
+            _rep = rep;
+            _logger = logger;
+        }
+
+        // GET: api/water
+        [HttpGet]
+        public async Task<IEnumerable<Water>> GetAsync()
+        {
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_water_seconds", "Histogram").NewTimer())
+            {
+                var result = await _rep.Water.SelectAllAsync();
+                return result.OrderBy(_ => _.Longname);
+            }
+        }
+
+        // GET api/water/8177a148-5674-4b8f-8ded-050907f640f3
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Water>> GetAsync(
+            Guid id)
+        {
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_water_id_seconds", "Histogram").NewTimer())
+            {
+                return await _rep.Water.SelectByIdAsync(id);
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> PostAsync(
+            WaterDto waterDto)
+        {
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_POST_api_water_seconds", "Histogram").NewTimer())
+            {
+                var water = new Water
+                {
+                    Id = Guid.NewGuid(),
+                    Longname = waterDto.Longname.ToUpper(),
+                    Shortname = waterDto.Shortname.ToUpper(),
+                    Created = DateTime.Now
+                };
+                var result = await _rep.Water.InsertAsync(water);
+                waterDto.Id = result.Id;
+                return new JsonResult(waterDto, _options);
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> PutAsync(
+            Guid id,
+            WaterDto waterDto)
+        {
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_PUT_api_water_seconds", "Histogram").NewTimer())
+            {
+                var water = await _rep.Water.SelectByIdAsync(id);
+                water.Longname = waterDto.Longname;
+                water.Shortname = waterDto.Shortname;
+                var result = _rep.Water.UpdateAsync(water);
+                return new JsonResult(waterDto, _options);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteAsync(
+            Guid id)
+        {
+            using (Metrics.CreateHistogram($"slipwaysapi_duration_DELETE_api_water_seconds", "Histogram").NewTimer())
+            {
+                try
+                {
+                    var result = await _rep.Water.DeleteAsync(id);
+                    return new JsonResult(result, _options);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(6666, $"Error occurred while deleting Water with id '{id}'", e);
+                    return new StatusCodeResult(500);
+                }
+            }
+        }
+    }
+}

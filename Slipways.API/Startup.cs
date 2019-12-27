@@ -2,6 +2,7 @@ using System;
 using com.b_velop.Slipways.API.Infrastructure;
 using com.b_velop.Slipways.Data;
 using com.b_velop.Slipways.Data.Contracts;
+using com.b_velop.Slipways.Data.Extensions;
 using com.b_velop.Slipways.Data.Repositories;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authorization;
@@ -34,12 +35,8 @@ namespace Slipways.API
             services.AddControllers();
             var authority = Environment.GetEnvironmentVariable("AUTHORITY");
             var apiResource = Environment.GetEnvironmentVariable("API_RESOURCE");
-
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = "cache";
-                options.InstanceName = "Slipways";
-            });
+            var cache = Environment.GetEnvironmentVariable("CACHE");
+            services.AddSlipwaysData(cache);
 
             services.AddDbContext<SlipwaysContext>(options =>
             {
@@ -71,17 +68,6 @@ namespace Slipways.API
 #endif
                 options.UseSqlServer(str);
             });
-
-            services.AddScoped<IWaterRepository, WaterRepository>();
-            services.AddScoped<IStationRepository, StationRepository>();
-            services.AddScoped<ISlipwayRepository, SlipwayRepository>();
-            services.AddScoped<IExtraRepository, ExtraRepository>();
-            services.AddScoped<IServiceRepository, ServiceRepository>();
-            services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
-            services.AddScoped<IManufacturerServicesRepository, ManufacturerServicesRepository>();
-            services.AddScoped<IPortRepository, PortRepository>();
-            services.AddScoped<ISlipwayExtraRepository, SlipwayExtraRepository>();
-            services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 
             services.AddAuthorization(options =>
             {

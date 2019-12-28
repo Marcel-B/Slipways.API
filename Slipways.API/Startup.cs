@@ -69,23 +69,23 @@ namespace Slipways.API
                 options.UseSqlServer(str);
             });
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("reader", builder =>
-                {
-                    builder.RequireScope("slipways.api.reader");
-                });
-                options.AddPolicy("allin", builder => builder.RequireScope("slipways.api.allaccess"));
-            });
+            //services.AddAuthorization(options =>
+            //{
+            //    options.AddPolicy("reader", builder =>
+            //    {
+            //        builder.RequireScope("slipways.api.reader");
+            //    });
+            //    options.AddPolicy("allin", builder => builder.RequireScope("slipways.api.allaccess"));
+            //});
 
-            services
-                .AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
-            .AddIdentityServerAuthentication(options =>
-            {
-                options.Authority = authority;
-                options.RequireHttpsMetadata = false;
-                options.ApiName = apiResource;
-            });
+            //services
+            //    .AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+            //.AddIdentityServerAuthentication(options =>
+            //{
+            //    options.Authority = authority;
+            //    options.RequireHttpsMetadata = false;
+            //    options.ApiName = apiResource;
+            //});
         }
 
         public void Configure(
@@ -98,8 +98,8 @@ namespace Slipways.API
             }
             app.UseHttpMetrics();
             app.UseRouting();
-            app.UseAuthentication();
-            app.UseAuthorization();
+            //app.UseAuthentication();
+            //app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

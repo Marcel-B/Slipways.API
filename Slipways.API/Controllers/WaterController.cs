@@ -15,7 +15,7 @@ namespace com.b_velop.Slipways.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class WaterController : ControllerBase
     {
         private readonly JsonSerializerOptions _options;

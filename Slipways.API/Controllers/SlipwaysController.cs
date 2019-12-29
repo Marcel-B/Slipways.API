@@ -7,7 +7,6 @@ using com.b_velop.Slipways.Data.Contracts;
 using com.b_velop.Slipways.Data.Dtos;
 using com.b_velop.Slipways.Data.Extensions;
 using com.b_velop.Slipways.Data.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Prometheus;
@@ -16,15 +15,15 @@ namespace com.b_velop.Slipways.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SlipwayController : ControllerBase
+    public class SlipwaysController : ControllerBase
     {
         private readonly JsonSerializerOptions _options;
         private readonly IRepositoryWrapper _rep;
-        private readonly ILogger<SlipwayController> _logger;
+        private readonly ILogger<SlipwaysController> _logger;
 
-        public SlipwayController(
+        public SlipwaysController(
             IRepositoryWrapper rep,
-            ILogger<SlipwayController> logger)
+            ILogger<SlipwaysController> logger)
         {
             _options = new JsonSerializerOptions
             {
@@ -63,7 +62,6 @@ namespace com.b_velop.Slipways.API.Controllers
         public async Task<ActionResult> PostAsync(
             SlipwayDto slipwayDto)
         {
-            Console.WriteLine($"Water is: {slipwayDto.WaterFk}");
             using (Metrics.CreateHistogram($"slipwaysapi_duration_POST_api_slipway_seconds", "Histogram").NewTimer())
             {
                 try

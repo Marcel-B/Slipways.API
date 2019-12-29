@@ -58,7 +58,6 @@ namespace com.b_velop.Slipways.API.Controllers
         }
 
         [HttpPost]
-        //[Authorize("allin")]
         public async Task<ActionResult> PostAsync(
             SlipwayDto slipwayDto)
         {
@@ -99,7 +98,6 @@ namespace com.b_velop.Slipways.API.Controllers
         }
 
         [HttpPut("{id}")]
-        //[Authorize("allin")]
         public async Task<ActionResult> PutAsync(
             Guid id,
             SlipwayDto slipwayDto)
@@ -141,7 +139,6 @@ namespace com.b_velop.Slipways.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        //[Authorize("allin")]
         public async Task<string> DeleteSlipwayAsync(
             Guid id)
         {

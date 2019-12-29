@@ -72,7 +72,7 @@ namespace com.b_velop.Slipways.API.Controllers
                     if (result != null && slipwayDto.Extras != null)
                     {
                         var extras = new HashSet<SlipwayExtra>();
-                        foreach (var extra in slipwayDto.Extras)
+                        foreach (var extra in slipwayDto?.Extras)
                         {
                             var slipwayExtra = new SlipwayExtra
                             {
@@ -89,9 +89,19 @@ namespace com.b_velop.Slipways.API.Controllers
                     slipwayDto.Created = result.Created;
                     return new JsonResult(slipway, _options);
                 }
+                catch (NullReferenceException e)
+                {
+                    _logger.LogError(4444, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
+                    return new StatusCodeResult(500);
+                }
+                catch (ArgumentNullException e)
+                {
+                    _logger.LogError(5555, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
+                    return new StatusCodeResult(500);
+                }
                 catch (Exception e)
                 {
-                    _logger.LogError(6666, $"Error occurred while insert Slipway", e);
+                    _logger.LogError(6666, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
                     return new StatusCodeResult(500);
                 }
             }

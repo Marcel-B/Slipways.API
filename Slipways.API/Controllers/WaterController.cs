@@ -1,7 +1,6 @@
 ﻿using com.b_velop.Slipways.Data.Contracts;
 using com.b_velop.Slipways.Data.Dtos;
 using com.b_velop.Slipways.Data.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Prometheus;
@@ -15,7 +14,6 @@ namespace com.b_velop.Slipways.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class WaterController : ControllerBase
     {
         private readonly JsonSerializerOptions _options;

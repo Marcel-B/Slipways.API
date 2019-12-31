@@ -7,7 +7,6 @@ using com.b_velop.Slipways.Data.Contracts;
 using com.b_velop.Slipways.Data.Dtos;
 using com.b_velop.Slipways.Data.Extensions;
 using com.b_velop.Slipways.Data.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Prometheus;
@@ -16,15 +15,15 @@ namespace com.b_velop.Slipways.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SlipwayController : ControllerBase
+    public class SlipwaysController : ControllerBase
     {
         private readonly JsonSerializerOptions _options;
         private readonly IRepositoryWrapper _rep;
-        private readonly ILogger<SlipwayController> _logger;
+        private readonly ILogger<SlipwaysController> _logger;
 
-        public SlipwayController(
+        public SlipwaysController(
             IRepositoryWrapper rep,
-            ILogger<SlipwayController> logger)
+            ILogger<SlipwaysController> logger)
         {
             _options = new JsonSerializerOptions
             {
@@ -59,11 +58,9 @@ namespace com.b_velop.Slipways.API.Controllers
         }
 
         [HttpPost]
-        [Authorize("allin")]
         public async Task<ActionResult> PostAsync(
             SlipwayDto slipwayDto)
         {
-            Console.WriteLine($"Water is: {slipwayDto.WaterFk}");
             using (Metrics.CreateHistogram($"slipwaysapi_duration_POST_api_slipway_seconds", "Histogram").NewTimer())
             {
                 try
@@ -75,7 +72,7 @@ namespace com.b_velop.Slipways.API.Controllers
                     if (result != null && slipwayDto.Extras != null)
                     {
                         var extras = new HashSet<SlipwayExtra>();
-                        foreach (var extra in slipwayDto.Extras)
+                        foreach (var extra in slipwayDto?.Extras)
                         {
                             var slipwayExtra = new SlipwayExtra
                             {
@@ -92,16 +89,25 @@ namespace com.b_velop.Slipways.API.Controllers
                     slipwayDto.Created = result.Created;
                     return new JsonResult(slipway, _options);
                 }
+                catch (NullReferenceException e)
+                {
+                    _logger.LogError(4444, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
+                    return new StatusCodeResult(500);
+                }
+                catch (ArgumentNullException e)
+                {
+                    _logger.LogError(5555, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
+                    return new StatusCodeResult(500);
+                }
                 catch (Exception e)
                 {
-                    _logger.LogError(6666, $"Error occurred while insert Slipway", e);
+                    _logger.LogError(6666, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
                     return new StatusCodeResult(500);
                 }
             }
         }
 
         [HttpPut("{id}")]
-        [Authorize("allin")]
         public async Task<ActionResult> PutAsync(
             Guid id,
             SlipwayDto slipwayDto)
@@ -143,7 +149,6 @@ namespace com.b_velop.Slipways.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize("allin")]
         public async Task<string> DeleteSlipwayAsync(
             Guid id)
         {

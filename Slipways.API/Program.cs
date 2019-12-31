@@ -49,14 +49,16 @@ namespace Slipways.API
             string[] args) =>
             Host.CreateDefaultBuilder(args)
             .ConfigureLogging(logging =>
-            {
-                logging.ClearProviders();
-                logging.AddConsole();
-                logging.SetMinimumLevel(LogLevel.Trace);
-            })
-                .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    logging.ClearProviders();
+                    logging.AddConsole();
+                    logging.SetMinimumLevel(LogLevel.Trace);
+                })
+            .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseUrls("http://*:8095");
                     webBuilder.UseStartup<Startup>();
-                }).UseNLog();
+                })
+            .UseNLog();
     }
 }

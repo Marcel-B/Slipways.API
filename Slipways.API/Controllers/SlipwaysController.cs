@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using com.b_velop.Slipways.Data.Contracts;
 using com.b_velop.Slipways.Data.Dtos;
@@ -18,30 +19,31 @@ namespace com.b_velop.Slipways.API.Controllers
     public class SlipwaysController : ControllerBase
     {
         private readonly JsonSerializerOptions _options;
-        private readonly IRepositoryWrapper _rep;
+        private readonly IRepositoryWrapper _repository;
         private readonly ILogger<SlipwaysController> _logger;
 
         public SlipwaysController(
-            IRepositoryWrapper rep,
+            IRepositoryWrapper repository,
             ILogger<SlipwaysController> logger)
         {
             _options = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true,
+                WriteIndented = false,
                 IgnoreNullValues = true
             };
-            _rep = rep;
+            _repository = repository;
             _logger = logger;
         }
 
         // GET: api/slipway
         [HttpGet]
-        public async Task<IEnumerable<Slipway>> GetAsync()
+        public async Task<IEnumerable<Slipway>> GetAsync(
+            CancellationToken cancellationToken)
         {
-            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_slipway_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipways_api_duration_GET_api_slipway_seconds", "Histogram").NewTimer())
             {
-                var result = await _rep.Slipway.SelectAllAsync();
+                var result = await _repository.Slipway.SelectAllAsync(cancellationToken);
                 return result.OrderBy(_ => _.Name);
             }
         }
@@ -49,26 +51,30 @@ namespace com.b_velop.Slipways.API.Controllers
         // GET api/slipway/8177a148-5674-4b8f-8ded-050907f640f3
         [HttpGet("{id}")]
         public async Task<ActionResult<Slipway>> GetAsync(
-            Guid id)
+            Guid id,
+            CancellationToken cancellationToken)
         {
-            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_slipway_id_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipways_api_duration_GET_api_slipway_id_seconds", "Histogram").NewTimer())
             {
-                return await _rep.Slipway.SelectByIdAsync(id);
+                return await _repository.Slipway.SelectByIdAsync(id, cancellationToken);
             }
         }
 
         [HttpPost]
         public async Task<ActionResult> PostAsync(
-            SlipwayDto slipwayDto)
+            SlipwayDto slipwayDto,
+            CancellationToken cancellationToken)
         {
-            using (Metrics.CreateHistogram($"slipwaysapi_duration_POST_api_slipway_seconds", "Histogram").NewTimer())
+            if (slipwayDto == null || string.IsNullOrWhiteSpace(slipwayDto.Name))
+                return BadRequest("SlipwayDto is null or incorrect format");
+
+            using (Metrics.CreateHistogram($"slipways_api_duration_POST_api_slipway_seconds", "Histogram").NewTimer())
             {
                 try
                 {
                     var slipway = slipwayDto.ToClass();
-                    slipway.Id = Guid.NewGuid();
 
-                    var result = await _rep.Slipway.InsertAsync(slipway);
+                    var result = await _repository.Slipway.InsertAsync(slipway, cancellationToken);
                     if (result != null && slipwayDto.Extras != null)
                     {
                         var extras = new HashSet<SlipwayExtra>();
@@ -83,7 +89,7 @@ namespace com.b_velop.Slipways.API.Controllers
                             };
                             extras.Add(slipwayExtra);
                         }
-                        _ = await _rep.SlipwayExtra.InsertRangeAsync(extras);
+                        _ = await _repository.SlipwayExtra.InsertRangeAsync(extras, cancellationToken);
                     }
                     slipwayDto.Id = slipway.Id;
                     slipwayDto.Created = result.Created;
@@ -91,12 +97,12 @@ namespace com.b_velop.Slipways.API.Controllers
                 }
                 catch (NullReferenceException e)
                 {
-                    _logger.LogError(4444, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
+                    _logger.LogError(6664, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
                     return new StatusCodeResult(500);
                 }
                 catch (ArgumentNullException e)
                 {
-                    _logger.LogError(5555, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
+                    _logger.LogError(6665, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
                     return new StatusCodeResult(500);
                 }
                 catch (Exception e)
@@ -110,34 +116,44 @@ namespace com.b_velop.Slipways.API.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult> PutAsync(
             Guid id,
-            SlipwayDto slipwayDto)
+            SlipwayDto slipwayDto,
+            CancellationToken cancellationToken)
         {
-            using (Metrics.CreateHistogram($"slipwaysapi_duration_PUT_api_slipway_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipways_api_duration_PUT_api_slipway_seconds", "Histogram").NewTimer())
             {
                 try
                 {
                     var slipway = slipwayDto.ToClass();
-                    slipway.Id = Guid.NewGuid();
 
-                    var result = await _rep.Slipway.UpdateAsync(slipway);
-                    if (result != null)
+                    if (slipway.Id != id)
+                        return BadRequest("IDs are not the same");
+
+                    var result = await _repository.Slipway.UpdateAsync(slipway, cancellationToken);
+                    if (result == null)
                     {
-                        var extras = new HashSet<SlipwayExtra>();
-                        foreach (var extra in slipwayDto.Extras)
-                        {
-                            var slipwayExtra = new SlipwayExtra
-                            {
-                                Id = Guid.NewGuid(),
-                                Created = DateTime.Now,
-                                ExtraFk = extra.Id,
-                                SlipwayFk = result.Id,
-                            };
-                            extras.Add(slipwayExtra);
-                        }
-                        _ = await _rep.SlipwayExtra.UpdateRangeAsync(extras);
+                        _logger.LogError(6660, $"Error occurred while updating Slipway '{slipwayDto.Name} : {id}'");
+                        return new StatusCodeResult(500);
                     }
+
+                    // TODO - update not really works atm
+                    var extras = new HashSet<SlipwayExtra>();
+                    foreach (var extra in slipwayDto.Extras)
+                    {
+                        var slipwayExtra = new SlipwayExtra
+                        {
+                            Created = DateTime.Now,
+                            ExtraFk = extra.Id,
+                            SlipwayFk = result.Id,
+                        };
+                        extras.Add(slipwayExtra);
+                    }
+                    _ = await _repository.SlipwayExtra.UpdateRangeAsync(extras, cancellationToken);
+                    // ************
+
                     slipwayDto.Id = slipway.Id;
                     slipwayDto.Created = result.Created;
+                    slipwayDto.Updated = result.Updated;
+
                     return new JsonResult(slipway, _options);
                 }
                 catch (Exception e)
@@ -149,25 +165,27 @@ namespace com.b_velop.Slipways.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<string> DeleteSlipwayAsync(
-            Guid id)
+        public async Task<IActionResult> DeleteSlipwayAsync(
+            Guid id,
+            CancellationToken cancellationToken)
         {
-            using (Metrics.CreateHistogram($"slipwaysapi_duration_DELETE_api_slipway_seconds", "Histogram").NewTimer())
+            if (id == Guid.Empty)
+                return BadRequest("Slipway ID is not valid");
+
+            using (Metrics.CreateHistogram($"slipways_api_duration_DELETE_api_slipway_seconds", "Histogram").NewTimer())
             {
                 try
                 {
                     _logger.LogInformation(5555, $"Try to delete Slipway '{id}'");
-                    var result = await _rep.Slipway.DeleteAsync(id);
+                    var result = await _repository.Slipway.DeleteAsync(id, cancellationToken);
                     var json = JsonSerializer.Serialize(result, _options);
                     _logger.LogInformation($"Delete Result is:\n{json}");
-                    Response.StatusCode = 200;
-                    return json;
+                    return new OkObjectResult(json);
                 }
                 catch (Exception e)
                 {
                     _logger.LogError(6666, $"Error occurred while deleting Slipway with id '{id}'", e);
-                    Response.StatusCode = 500;
-                    return string.Empty;
+                    return new StatusCodeResult(500);
                 }
             }
         }

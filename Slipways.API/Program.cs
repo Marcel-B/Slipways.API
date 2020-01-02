@@ -14,16 +14,6 @@ namespace Slipways.API
             string[] args)
         {
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var job = env == "Production" ? "SlipwaysApi" : "DevSlipwaysApi";
-            PushGateway = new MetricPusher(new MetricPusherOptions
-            {
-                Endpoint = "https://push.qaybe.de/metrics",
-                Job = job,
-                Instance = job
-            });
-
-            PushGateway.Start();
-
             var file = "dev-nlog.config";
             if (env == "Production")
                 file = "nlog.config";

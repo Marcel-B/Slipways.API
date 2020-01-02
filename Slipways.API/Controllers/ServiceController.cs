@@ -8,6 +8,7 @@ using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace com.b_velop.Slipways.API.Controllers
@@ -16,45 +17,48 @@ namespace com.b_velop.Slipways.API.Controllers
     [ApiController]
     public class ServiceController : Controller
     {
-        private IRepositoryWrapper _rep;
-        private JsonSerializerOptions _options;
-        private ILogger<ServiceController> _logger;
+        private readonly IRepositoryWrapper _repository;
+        private readonly JsonSerializerOptions _options;
+        private readonly ILogger<ServiceController> _logger;
 
         public ServiceController(
-            IRepositoryWrapper rep,
+            IRepositoryWrapper repository,
             ILogger<ServiceController> logger)
         {
-            _rep = rep;
+            _repository = repository;
             _logger = logger;
 
             _options = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true,
+                WriteIndented = false,
                 IgnoreNullValues = true
             };
         }
 
         // GET: api/values
         [HttpGet]
-        public async Task<IEnumerable<Service>> Get()
+        public async Task<IEnumerable<Service>> Get(
+            CancellationToken cancellationToken)
         {
-            var values = await _rep.Service.SelectAllAsync();
+            var values = await _repository.Service.SelectAllAsync(cancellationToken);
             return values;
         }
 
         [HttpPost]
         public async Task<ActionResult> PostAsync(
-           ServiceDto serviceDto)
+           ServiceDto serviceDto,
+           CancellationToken cancellationToken)
         {
-            using (Metrics.CreateHistogram($"slipwayapi_duration_POST_api_service_seconds", "Histogram").NewTimer())
+            if (serviceDto == null || string.IsNullOrEmpty(serviceDto.Name))
+                return BadRequest("ServiceDto is null or format error");
+
+            using (Metrics.CreateHistogram($"slipways_api_duration_POST_api_service_seconds", "Histogram").NewTimer())
             {
                 try
                 {
                     var service = serviceDto.ToClass();
-                    service.Id = Guid.NewGuid();
-
-                    var result = await _rep.Service.InsertAsync(service);
+                    var result = await _repository.Service.InsertAsync(service, cancellationToken);
                     if (result != null)
                     {
                         if (serviceDto.Manufacturers != null)
@@ -71,7 +75,7 @@ namespace com.b_velop.Slipways.API.Controllers
                                 };
                                 manufacturers.Add(manufacturerService);
                             }
-                            _ = await _rep.ManufacturerServices.InsertRangeAsync(manufacturers);
+                            _ = await _repository.ManufacturerServices.InsertRangeAsync(manufacturers, cancellationToken);
                         }
                         serviceDto.Id = service.Id;
                         return new JsonResult(serviceDto, _options);
@@ -80,7 +84,7 @@ namespace com.b_velop.Slipways.API.Controllers
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(6666, $"Error occurred while insert Service", e);
+                    _logger.LogError(6666, $"Unexpected error occurred while insert Service '{serviceDto?.Name}'", e);
                     return new StatusCodeResult(500);
                 }
             }

@@ -6,6 +6,7 @@ using Prometheus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace com.b_velop.Slipways.API.Controllers
@@ -27,11 +28,12 @@ namespace com.b_velop.Slipways.API.Controllers
 
         // GET: api/values
         [HttpGet]
-        public async Task<IEnumerable<Station>> GetAsync()
+        public async Task<IEnumerable<Station>> GetAsync(
+            CancellationToken cancellationToken)
         {
-            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_station_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipways_api_duration_GET_api_station_seconds", "Histogram").NewTimer())
             {
-                var result = await _rep.Station.SelectAllAsync();
+                var result = await _rep.Station.SelectAllAsync(cancellationToken);
                 return result.OrderBy(_ => _.Longname);
             }
         }
@@ -39,11 +41,12 @@ namespace com.b_velop.Slipways.API.Controllers
         // GET api/values/8177a148-5674-4b8f-8ded-050907f640f3
         [HttpGet("{id}")]
         public async Task<ActionResult<Station>> GetAsync(
-            Guid id)
+            Guid id,
+            CancellationToken cancellationToken)
         {
-            using (Metrics.CreateHistogram($"slipwaysapi_duration_GET_api_station_id_seconds", "Histogram").NewTimer())
+            using (Metrics.CreateHistogram($"slipways_api_duration_GET_api_station_id_seconds", "Histogram").NewTimer())
             {
-                return await _rep.Station.SelectByIdAsync(id);
+                return await _rep.Station.SelectByIdAsync(id, cancellationToken);
             }
         }
     }

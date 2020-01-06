@@ -107,7 +107,7 @@ namespace com.b_velop.Slipways.API.Controllers
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(6666, $"Error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
+                    _logger.LogError(6666, $"Unexpected error occurred while insert Slipway\n'{slipwayDto?.Name} / {slipwayDto?.City}'", e);
                     return new StatusCodeResult(500);
                 }
             }

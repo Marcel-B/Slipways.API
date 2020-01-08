@@ -40,7 +40,7 @@ namespace com.b_velop.Slipways.API.Controllers
             try
             {
                 var port = portDto.ToClass();
-                port = await _repository.Port.InsertAsync(port, cancellationToken);
+                port = await _repository.Port.InsertAsync(port, cancellationToken, false);
                 if (port == null)
                 {
                     _logger.LogWarning(5555, $"Error occurred while inserting Port '{portDto.Name}'");
@@ -52,11 +52,10 @@ namespace com.b_velop.Slipways.API.Controllers
                     foreach (var slipway in port.Slipways)
                     {
                         var tmp = await _repository.Slipway.SelectByIdAsync(slipway.Id, cancellationToken);
-                        var currentSlipway = tmp.Copy();
-                        currentSlipway.PortFk = port.Id;
-                        _repository.SaveChanges();
+                        tmp.PortFk = port.Id;
                     }
                 }
+                _repository.SaveChanges();
                 return new JsonResult(portDto);
             }
             catch (Exception e)

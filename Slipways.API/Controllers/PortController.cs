@@ -53,7 +53,7 @@ namespace com.b_velop.Slipways.API.Controllers
                     {
                         var tmp = await _repository.Slipway.SelectByIdAsync(slipway.Id, cancellationToken);
                         tmp.PortFk = port.Id;
-                        _ = await _repository.Slipway.UpdateAsync(tmp);
+                        _ = await _repository.Slipway.UpdateAsync(tmp.Copy());
                     }
                 }
                 return new JsonResult(portDto);

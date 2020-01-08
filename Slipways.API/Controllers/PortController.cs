@@ -55,7 +55,7 @@ namespace com.b_velop.Slipways.API.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(6666, $"Unexpected error occurred while inserting Port '{portDto.Name}'", e);
+                _logger.LogError(6666, $"Unexpected error occurred while inserting Port '{portDto.Name}'\n{e.StackTrace}", e);
             }
             return new StatusCodeResult(500);
         }

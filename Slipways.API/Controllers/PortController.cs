@@ -52,8 +52,9 @@ namespace com.b_velop.Slipways.API.Controllers
                     foreach (var slipway in port.Slipways)
                     {
                         var tmp = await _repository.Slipway.SelectByIdAsync(slipway.Id, cancellationToken);
-                        tmp.PortFk = port.Id;
-                        _ = await _repository.Slipway.UpdateAsync(tmp.Copy());
+                        var currentSlipway = tmp.Copy();
+                        currentSlipway.PortFk = port.Id;
+                        _ = await _repository.Slipway.UpdateAsync(currentSlipway);
                     }
                 }
                 return new JsonResult(portDto);

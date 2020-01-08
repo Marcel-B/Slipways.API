@@ -3,17 +3,16 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Web;
-using Prometheus;
 
 namespace Slipways.API
 {
     public class Program
     {
-        public static MetricPusher PushGateway;
         public static void Main(
             string[] args)
         {
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
             var file = "dev-nlog.config";
             if (env == "Production")
                 file = "nlog.config";
@@ -39,16 +38,16 @@ namespace Slipways.API
             string[] args) =>
             Host.CreateDefaultBuilder(args)
             .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.AddConsole();
-                    logging.SetMinimumLevel(LogLevel.Trace);
-                })
+            {
+                logging.ClearProviders();
+                logging.AddConsole();
+                logging.SetMinimumLevel(LogLevel.Trace);
+            })
             .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseUrls("http://*:8095");
-                    webBuilder.UseStartup<Startup>();
-                })
+            {
+                webBuilder.UseUrls("http://*:8095");
+                webBuilder.UseStartup<Startup>();
+            })
             .UseNLog();
     }
 }

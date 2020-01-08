@@ -41,6 +41,11 @@ namespace com.b_velop.Slipways.API.Controllers
             {
                 var port = portDto.ToClass();
                 port = await _repository.Port.InsertAsync(port, cancellationToken);
+                if (port == null)
+                {
+                    _logger.LogWarning(5555, $"Error occurred while inserting Port '{portDto.Name}'");
+                    return new StatusCodeResult(500);
+                }
                 portDto.Id = port.Id;
                 if (port.Slipways != null)
                 {

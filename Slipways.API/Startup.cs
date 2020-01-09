@@ -29,30 +29,31 @@ namespace Slipways.API
             services.AddControllers();
 
             var secretProvider = new SecretProvider();
+
             var port = Environment.GetEnvironmentVariable("PORT");
             var server = Environment.GetEnvironmentVariable("SERVER");
             var user = Environment.GetEnvironmentVariable("USER");
             var database = Environment.GetEnvironmentVariable("DATABASE");
 
-            var pw = string.Empty;
+            var password = string.Empty;
 
             if (WebHostEnvironment.IsStaging())
             {
-                pw = secretProvider.GetSecret("dev_slipway_db");
+                password = secretProvider.GetSecret("dev_slipway_db");
             }
             else if (WebHostEnvironment.IsProduction())
             {
-                pw = secretProvider.GetSecret("sqlserver");
+                password = secretProvider.GetSecret("sqlserver");
             }
             else
             {
-                pw = "foo123bar!";
+                password = "foo123bar!";
             }
-            var str = $"Server={server},{port};Database={database};User Id={user};Password={pw}";
+            var connectionString = $"Server={server},{port};Database={database};User Id={user};Password={password}";
 #if DEBUG
-            str = $"Server=localhost,1433;Database=Slipways;User Id=sa;Password=foo123bar!";
+            connectionString = $"Server=localhost,1433;Database=Slipways;User Id=sa;Password=foo123bar!";
 #endif
-            services.AddSlipwaysData(str);
+            services.AddSlipwaysData(connectionString);
         }
 
         public void Configure(

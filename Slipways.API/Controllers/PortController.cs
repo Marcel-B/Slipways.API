@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using com.b_velop.Slipways.Data.Contracts;
 using com.b_velop.Slipways.Data.Dtos;
 using com.b_velop.Slipways.Data.Extensions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -37,19 +34,23 @@ namespace com.b_velop.Slipways.API.Controllers
                 _logger.LogWarning($"Error occurred while POST new Port. No name provided");
                 return BadRequest("Value null or incorrect format");
             }
+
             try
             {
                 var port = portDto.ToClass();
+                var slipways = port.Slipways;
+                port.Slipways = null;
                 port = await _repository.Port.InsertAsync(port, cancellationToken, false);
                 if (port == null)
                 {
                     _logger.LogWarning(5555, $"Error occurred while inserting Port '{portDto.Name}'");
                     return new StatusCodeResult(500);
                 }
+                _repository.Context.SaveChanges();
                 portDto.Id = port.Id;
-                if (port.Slipways != null)
+                if (slipways != null)
                 {
-                    foreach (var slipway in port.Slipways)
+                    foreach (var slipway in slipways)
                     {
                         var tmp = await _repository.Slipway.SelectByIdAsync(slipway.Id, cancellationToken);
                         tmp.PortFk = port.Id;

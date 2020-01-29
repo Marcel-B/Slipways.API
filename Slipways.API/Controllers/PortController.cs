@@ -52,8 +52,8 @@ namespace com.b_velop.Slipways.API.Controllers
                 {
                     foreach (var slipway in slipways)
                     {
-                        var tmp = await _repository.Slipway.SelectByIdAsync(slipway.Id, cancellationToken);
-                        tmp.PortFk = port.Id;
+                        var tmp = await _repository.Slipway.AddPortToSlipwayAsync(slipway.Id, port.Id);
+                        _logger.LogInformation($"Add Port '{port.Name} - {port.Id}' to Slipway '{slipway?.Name} - {slipway?.Id}'");
                     }
                 }
                 _repository.SaveChanges();

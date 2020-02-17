@@ -57,7 +57,7 @@ namespace com.b_velop.Slipways.API.Controllers
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(6666, $"Unexpected error occurred while insert '{extraDto.Name}'", e);
+                    _logger.LogError(6666, e, $"Unexpected error occurred while insert '{extraDto.Name}'");
                     return new StatusCodeResult(500);
                 }
             }

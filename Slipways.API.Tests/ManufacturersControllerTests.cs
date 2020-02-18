@@ -199,7 +199,7 @@ namespace Slipways.API.Tests
         }
 
         [Test]
-        public async Task ManufacturerController_PostAsync_LogsErrorWhenDtoIsNull()
+        public async Task ManufacturerController_PostAsync_CreateLogWhenDtoIsNull()
         {
             // Arrange
             var sut = GetSut();
@@ -209,6 +209,51 @@ namespace Slipways.API.Tests
 
             // Assert
             Assert.That(Logs.Count == 1);
+        }
+
+        [Test]
+        public async Task ManufacturerController_PostAsync_LogsWaringWhenDtoIsNull()
+        {
+            // Arrange
+            var sut = GetSut();
+            var expected = LogLevel.Warning;
+
+            // Act
+            _ = await sut.PostAsync(null);
+            var actual = Logs.First().LogLevel;
+
+            // Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public async Task ManufacturerController_PostAsync_CreateLogWithEventId5000WhenDtoIsNull()
+        {
+            // Arrange
+            var sut = GetSut();
+            var expected = 5000;
+
+            // Act
+            _ = await sut.PostAsync(null);
+            var actual = Logs.First().EventId;
+
+            // Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public async Task ManufacturerController_PostAsync_CreateLogWithEventId5000WhenDtosNameIsEmpty()
+        {
+            // Arrange
+            var sut = GetSut();
+            var expected = 5000;
+
+            // Act
+            _ = await sut.PostAsync(GetDto(""));
+            var actual = Logs.First().EventId;
+
+            // Assert
+            Assert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -254,7 +299,6 @@ namespace Slipways.API.Tests
             // Assert
             Assert.That(Logs.Count == 1);
         }
-
 
         [Test]
         public async Task ManufactuerController_PostAsync_LogExceptionWhenUnexpectedErrorOccurres()
@@ -374,3 +418,4 @@ namespace Slipways.API.Tests
         }
     }
 }
+

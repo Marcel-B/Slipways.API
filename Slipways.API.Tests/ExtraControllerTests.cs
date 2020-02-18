@@ -70,7 +70,6 @@ namespace Slipways.API.Tests
             Assert.IsInstanceOf<BadRequestObjectResult>(actual);
         }
 
-
         [Test]
         public async Task ExtraController_PostAsync_ReturnsBadRequestWhenDtosNameIsStringEmpty()
         {
@@ -164,7 +163,6 @@ namespace Slipways.API.Tests
             Assert.That(actual.Count > 0);
         }
 
-
         [Test]
         public async Task ExtraController_PostAsync_LogsErrorWithEventID6600WhenResultIsNull()
         {
@@ -184,7 +182,6 @@ namespace Slipways.API.Tests
             // Assert
             Assert.AreEqual(expected, actual);
         }
-
 
         [Test]
         public async Task ExtraController_PostAsync_ReturnsServerErrorWhenResultIsNull()

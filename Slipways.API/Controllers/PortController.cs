@@ -25,13 +25,13 @@ namespace com.b_velop.Slipways.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostPortAsync(
+        public async Task<IActionResult> PostAsync(
             PortDto portDto,
             CancellationToken cancellationToken)
         {
             if (portDto == null || string.IsNullOrWhiteSpace(portDto.Name))
             {
-                _logger.LogWarning($"Error occurred while POST new Port. No name provided");
+                _logger.LogWarning(5000, $"Error occurred while POST new Port. No name provided");
                 return BadRequest("Value null or incorrect format");
             }
 
@@ -43,10 +43,10 @@ namespace com.b_velop.Slipways.API.Controllers
                 port = await _repository.Port.InsertAsync(port, cancellationToken, false);
                 if (port == null)
                 {
-                    _logger.LogWarning(5555, $"Error occurred while inserting Port '{portDto.Name}'");
+                    _logger.LogError(5005, $"Error occurred while inserting Port '{portDto.Name}'");
                     return new StatusCodeResult(500);
                 }
-                _repository.Context.SaveChanges();
+                _repository.SaveChanges();
                 portDto.Id = port.Id;
                 if (slipways != null)
                 {
@@ -61,7 +61,7 @@ namespace com.b_velop.Slipways.API.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(6666, $"Unexpected error occurred while inserting Port '{portDto.Name}'\n{e.StackTrace}", e);
+                _logger.LogError(6666, e, $"Unexpected error occurred while inserting Port '{portDto.Name}'");
             }
             return new StatusCodeResult(500);
         }

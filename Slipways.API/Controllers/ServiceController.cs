@@ -38,11 +38,19 @@ namespace com.b_velop.Slipways.API.Controllers
 
         // GET: api/values
         [HttpGet]
-        public async Task<IEnumerable<Service>> Get(
+        public async Task<IEnumerable<Service>> GetAsync(
             CancellationToken cancellationToken)
         {
-            var values = await _repository.Service.SelectAllAsync(cancellationToken);
-            return values;
+            try
+            {
+                var values = await _repository.Service.SelectAllAsync(cancellationToken);
+                return values;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(6666, e, $"Unexpected Error occurred while Select all Services");
+                return null;
+            }
         }
 
         [HttpPost]

@@ -59,7 +59,10 @@ namespace com.b_velop.Slipways.API.Controllers
            CancellationToken cancellationToken)
         {
             if (serviceDto == null || string.IsNullOrEmpty(serviceDto.Name))
+            {
+                _logger.LogWarning(5000, $"Error occurred while POST new Service. Dto is null or no name provided");
                 return BadRequest("ServiceDto is null or format error");
+            }
 
             using (Metrics.CreateHistogram($"slipways_api_duration_POST_api_service_seconds", "Histogram").NewTimer())
             {
@@ -92,7 +95,7 @@ namespace com.b_velop.Slipways.API.Controllers
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(6666, $"Unexpected error occurred while insert Service '{serviceDto?.Name}'", e);
+                    _logger.LogError(6666, e, $"Unexpected error occurred while insert Service '{serviceDto?.Name}'");
                     return new StatusCodeResult(500);
                 }
             }

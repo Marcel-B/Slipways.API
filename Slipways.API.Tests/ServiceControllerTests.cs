@@ -1,6 +1,8 @@
 ﻿using com.b_velop.Slipways.API.Controllers;
 using com.b_velop.Slipways.Data.Contracts;
+using com.b_velop.Slipways.Data.Dtos;
 using com.b_velop.Slipways.Data.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -27,6 +29,13 @@ namespace Slipways.API.Tests
 
         private FakeLogger<ServiceController> GetLogger()
             => new FakeLogger<ServiceController>(Logs);
+
+        private ServiceDto GetDto(
+            string name = "Hobbot")
+            => new ServiceDto
+            {
+                Name = name,
+            };
 
         private IRepositoryWrapper GetRepositoryWrapper(
             bool errorInsertingValue,
@@ -141,6 +150,75 @@ namespace Slipways.API.Tests
 
             // Assert
             Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public async Task ServiceController_PostAsync_ReturnsBadRequestWhenDtoIsNull()
+        {
+            // Arrange
+            var sut = GetSut();
+
+            // Act
+            var response = await sut.PostAsync(null, CancellationToken.None);
+
+            // Assert
+            Assert.IsInstanceOf<BadRequestObjectResult>(response);
+        }
+
+        [Test]
+        public async Task ServiceController_PostAsync_CreateLogWhenDtoIsNull()
+        {
+            // Arrange
+            var sut = GetSut();
+
+            // Act
+            _ = await sut.PostAsync(null, CancellationToken.None);
+
+            // Assert
+            Assert.That(Logs.Count == 1);
+        }
+
+        [Test]
+        public async Task ServiceController_PostAsync_LogLevelIsWaringWhenDtoIsNull()
+        {
+            // Arrange
+            var sut = GetSut();
+            var expected = LogLevel.Warning;
+
+            // Act
+            _ = await sut.PostAsync(null, CancellationToken.None);
+            var actual = Logs.First().LogLevel;
+
+            // Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public async Task ServiceController_PostAsync_EventIdIs5000WhenDtoIsNull()
+        {
+            // Arrange
+            var sut = GetSut();
+            var expected = 5000;
+
+            // Act
+            _ = await sut.PostAsync(null, CancellationToken.None);
+            var actual = Logs.First().EventId;
+
+            // Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public async Task ServiceController_PostAsync_CreateLogWhenUnexpectedErrorOccurres()
+        {
+            // Arrange
+            var sut = GetSut(throwsException: true);
+
+            // Act
+            _ = await sut.PostAsync(GetDto(), CancellationToken.None);
+
+            // Assert
+            Assert.That(Logs.Count == 1);
         }
     }
 }

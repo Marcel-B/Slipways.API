@@ -187,15 +187,12 @@ namespace Slipways.API.Tests
         {
             // Arrange
             var sut = GetSut();
-            var expected = 400;
 
             // Act
             var response = await sut.PostAsync(null);
-            var badRequestObjectResult = response as BadRequestObjectResult;
-            var actual = badRequestObjectResult.StatusCode;
 
             // Assert
-            Assert.AreEqual(expected, actual);
+            Assert.IsInstanceOf<BadRequestObjectResult>(response);
         }
 
         [Test]

@@ -31,7 +31,7 @@ namespace com.b_velop.Slipways.API.Controllers
         {
             if (portDto == null || string.IsNullOrWhiteSpace(portDto.Name))
             {
-                //_logger.LogWarning(5000, $"Error occurred while POST new Port. Dto is null or no name provided");
+                _logger.LogWarning(5000, $"Error occurred while POST new Port. Dto is null or no name provided");
                 return BadRequest("Value null or incorrect format");
             }
 
